@@ -2,3 +2,9 @@ shapely
 scikit-learn
 torch
 matplotlib
+bezier
+scipy
+configargparse
+SciencePlots
+tqdm
+scikit-image

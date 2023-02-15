@@ -3,7 +3,7 @@
 ## How to configure 
 create a conda environment and install all the requirements 
 ```bash 
-conda create -n rig 
+conda create -n rig python=3.8
 conda activate rig 
 pip install -r requirements.txt 
 ```
