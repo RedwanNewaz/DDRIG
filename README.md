@@ -21,3 +21,9 @@ use the following argument in pycharm `` Run > edit configuration ``
 --config AK/experiments/configs/ak.yaml --env-name N45W123 --strategy distributed --seed 0
 ```
 
+
+### How to run baseline method 
+use the following argument in pycharm `` Run > edit configuration ``
+```bash 
+python main.py --config AK/experiments/configs/ak.yaml --env-name N45W123 --strategy myopic --seed 0 --no-viz --max-num-samples 200
+```

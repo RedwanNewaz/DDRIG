@@ -3,7 +3,7 @@ from time import time
 import pypolo
 import numpy as np
 import matplotlib.pyplot as plt
-
+import os
 def get_sensor(args, env):
     sensor = pypolo.sensors.Ranger(
         rate=args.sensing_rate,
@@ -116,13 +116,13 @@ def run(args, rng, model, strategy, sensor, evaluator, logger):
 
 def save(args, evaluator, logger):
     print("Saving metrics and logged data......")
-    experiment_id = "/".join([
+    experiment_id = "_".join([
         str(args.seed),
         args.env_name,
         args.strategy,
         args.kernel + args.postfix,
     ])
-    save_dir = args.output_dir + experiment_id
+    save_dir = os.path.join(args.output_dir, experiment_id)
     evaluator.save(save_dir)
     logger.save(save_dir)
 
