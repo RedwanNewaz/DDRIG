@@ -26,6 +26,8 @@ class DDMP(Thread):
 
             while not self.strategy.task_assigned:
                 sleep(1e-5)
+                if self.terminated:
+                    break
             try:
                 # sample informative locations
                 self.x_new = self.strategy.get(model=self.models[self.index])
@@ -46,7 +48,8 @@ class DDMP(Thread):
                 self.shared_mutex.release()
 
             except:
-                pass
+                if self.terminated:
+                    break
 
         print(f'[Robot {self.index}]: thread terminated ...')
 
