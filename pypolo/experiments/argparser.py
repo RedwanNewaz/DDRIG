@@ -50,7 +50,7 @@ def parse_arguments(verbose=True):
                         help="Maximum number of collected samples.")
     parser.add_argument("--output-dir",
                         type=str,
-                        default="./outputs/",
+                        default="",
                         help="Directory for outputs.")
     parser.add_argument("--figure-dir",
                         type=str,

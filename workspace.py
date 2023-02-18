@@ -1,4 +1,4 @@
-#!/home/redwan/anaconda3/envs/rig/bin/python
+#!/home/aredwann/anaconda3/envs/rig/bin/python
 import os
 from pathlib import Path
 from time import time
@@ -141,7 +141,7 @@ def run(args, rng, models, strategies, sensor, evaluators, loggers):
         strategies[i].set(models, partitions[i])
         thread.start()
 
-    while models[0].num_train < args.max_num_samples:
+    while count < args.max_num_samples:
         # check anybody completed its task or not
         assign_new_task = all(not s.task_assigned for s in strategies)
 
@@ -167,6 +167,10 @@ def run(args, rng, models, strategies, sensor, evaluators, loggers):
 
     for thread in ddmpThreads:
         thread.terminated = True
+    
+    for i, thread in enumerate(ddmpThreads):
+        print("[-] joining thread ", i + 1)
+        thread.join()
 
 
 
@@ -176,6 +180,7 @@ def run(args, rng, models, strategies, sensor, evaluators, loggers):
 
 def save(args, evaluators, loggers):
     print("Saving metrics and logged data......")
+    os.makedirs(args.output_dir, exist_ok=True)
     for i, (evaluator, logger) in enumerate(zip(evaluators, loggers)):
         try:
             experiment_id = "_".join([
@@ -184,7 +189,7 @@ def save(args, evaluators, loggers):
                 args.strategy, str(i + 1),  # i + 1 represents robot index
                 args.kernel + args.postfix,
             ])
-            save_dir = os.path.join(args.save_fig, experiment_id)
+            save_dir = os.path.join(args.output_dir, experiment_id)
             evaluator.save(save_dir)
             logger.save(save_dir)
         except:
@@ -249,7 +254,7 @@ def main():
     start = time()
     run(args, rng, gpModels, strategies, sensor, evaluators, loggers)
     end = time()
-    if len(args.save_fig):
+    if len(args.output_dir):
         save(args, evaluators, loggers)
     print(f"Time used: {end - start:.1f} seconds")
 

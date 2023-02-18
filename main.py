@@ -1,3 +1,4 @@
+#!/home/aredwann/anaconda3/envs/rig/bin/python
 from pathlib import Path
 from time import time
 import pypolo
