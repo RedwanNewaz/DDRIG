@@ -102,10 +102,15 @@ def run(args, rng, model, strategy, sensor, evaluator, logger):
         plt.axis(args.task_extent)
         plt.pause(1e-2)
 
+    
+    traj = None 
+
     while model.num_train < args.max_num_samples:
         x_new = strategy.get(model=model)
         y_new = sensor.sense(x_new, rng).reshape(-1, 1)
         # print(f"loc_shape = {x_new.shape} mes_shape = {y_new.shape}")
+        combined = np.hstack((x_new, y_new))
+        traj = combined if traj is None else np.vstack((traj, combined))
         animate(x_new)
 
         model.add_data(x_new, y_new)
@@ -113,6 +118,9 @@ def run(args, rng, model, strategy, sensor, evaluator, logger):
         mean, std, error = evaluator.eval_prediction(model)
         logger.append(mean, std, error, x_new, y_new, model.num_train)
         pypolo.experiments.utilities.print_metrics(model, evaluator)
+    
+    fname = os.path.join(args.output_dir, f'singleRobotTraj_{args.env_name}.csv')
+    np.savetxt(fname, traj , delimiter=', ', header='x, y, z')
 
 
 def save(args, evaluator, logger):

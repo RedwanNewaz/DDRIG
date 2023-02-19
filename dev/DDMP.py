@@ -8,8 +8,11 @@ The key strategy here
 
 from threading import Thread
 from time import sleep
+import numpy as np 
+import os 
+
 class DDMP(Thread):
-    def __init__(self, index, models, obs_func, strategy, shared_mutex):
+    def __init__(self, index, models, obs_func, strategy, shared_mutex, outdir):
         self.index = index
         self.models = models
         self.make_observation = obs_func
@@ -18,6 +21,8 @@ class DDMP(Thread):
         self.x_new = None
         self.y_new = None
         self.terminated = False
+        self.history = None
+        self.fname = os.path.join(outdir, f'ddmp_robot_{len(self.models)}{index}_traj.csv')
         Thread.__init__(self)
 
     def run(self):
@@ -33,6 +38,14 @@ class DDMP(Thread):
                 self.x_new = self.strategy.get(model=self.models[self.index])
                 # collect observations from informative sample locations
                 self.y_new = self.make_observation(self.x_new)
+
+                # append this information to history 
+                jointFrame = np.hstack((self.x_new, self.y_new))
+                self.history = jointFrame if self.history is None else np.vstack((self.history, jointFrame))
+            
+
+
+
                 # add this data point to all models
                 # self.shared_mutex.acquire()
                 # for m in self.models:
@@ -52,5 +65,12 @@ class DDMP(Thread):
                 if self.terminated:
                     break
 
-        print(f'[Robot {self.index}]: thread terminated ...')
+        
+        print(f'[DDMP]: Robot {self.index} thread terminated ...')
+
+    def save(self):
+        self.shared_mutex.acquire()
+        print(f'[DDMP] Robot {self.index}  traj saved @ ', self.fname)
+        np.savetxt(self.fname, self.history , delimiter=', ', header='x, y, z')
+        self.shared_mutex.release()
 
