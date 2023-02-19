@@ -1,4 +1,4 @@
-#!/home/redwan/anaconda3/envs/rig/bin/python
+#!/home/aredwann/anaconda3/envs/rig/bin/python
 import os
 from pathlib import Path
 from time import time
@@ -106,6 +106,26 @@ def get_voronoi_polygons(robots):
     polygons = [vertices[region] for region in regions]
     return polygons
 
+
+def save(args, evaluators, loggers):
+    print("Saving metrics and logged data......")
+    os.makedirs(args.output_dir, exist_ok=True)
+    for i, (evaluator, logger) in enumerate(zip(evaluators, loggers)):
+        try:
+            experiment_id = "_".join([
+                str(args.seed),
+                args.env_name,
+                args.strategy, str(i + 1),  # i + 1 represents robot index
+                args.kernel + args.postfix,
+            ])
+            save_dir = os.path.join(args.output_dir, experiment_id)
+            evaluator.save(save_dir)
+            logger.save(save_dir)
+        except:
+            pass
+
+
+
 def run(args, rng, models, strategies, sensor, evaluators, loggers):
 
     count = 0
@@ -134,14 +154,14 @@ def run(args, rng, models, strategies, sensor, evaluators, loggers):
     obs_func = lambda x_new: sensor.sense(x_new, rng).reshape(-1, 1)
     shared_mutex = Semaphore(len(strategies))
 
-    ddmpThreads = [DDMP(i, models, obs_func, strategy, shared_mutex) for i, strategy in enumerate(strategies)]
+    ddmpThreads = [DDMP(i, models, obs_func, strategy, shared_mutex, args.output_dir) for i, strategy in enumerate(strategies)]
     partitions = get_voronoi_polygons([s.robot for s in strategies])
 
     for i, thread in enumerate(ddmpThreads):
         strategies[i].set(models, partitions[i])
         thread.start()
 
-    while models[0].num_train < args.max_num_samples:
+    while count < args.max_num_samples:
         # check anybody completed its task or not
         assign_new_task = all(not s.task_assigned for s in strategies)
 
@@ -166,29 +186,20 @@ def run(args, rng, models, strategies, sensor, evaluators, loggers):
             sleep(1e-5)
 
     for thread in ddmpThreads:
+        thread.save()
         thread.terminated = True
+    
+    if len(args.output_dir):
+        save(args, evaluators, loggers)
+
+
+    for i, thread in enumerate(ddmpThreads):
+        print("[-] joining thread ", i + 1)
+        thread.join(timeout=1)
 
 
 
 
-
-
-
-def save(args, evaluators, loggers):
-    print("Saving metrics and logged data......")
-    for i, (evaluator, logger) in enumerate(zip(evaluators, loggers)):
-        try:
-            experiment_id = "_".join([
-                str(args.seed),
-                args.env_name,
-                args.strategy, str(i + 1),  # i + 1 represents robot index
-                args.kernel + args.postfix,
-            ])
-            save_dir = os.path.join(args.save_fig, experiment_id)
-            evaluator.save(save_dir)
-            logger.save(save_dir)
-        except:
-            pass
 
 
 
@@ -249,8 +260,6 @@ def main():
     start = time()
     run(args, rng, gpModels, strategies, sensor, evaluators, loggers)
     end = time()
-    if len(args.save_fig):
-        save(args, evaluators, loggers)
     print(f"Time used: {end - start:.1f} seconds")
 
 

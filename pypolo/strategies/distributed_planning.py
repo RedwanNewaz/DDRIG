@@ -96,7 +96,7 @@ class DistributedPlanning(IStrategy):
         return normed_entropy
 
 
-    def get(self, model: IModel, num_states: int = 1) -> np.ndarray:
+    def get(self, model: IModel, num_states: int = 1, loop_count: int = 0) -> np.ndarray:
         """      """
         if not self.task_assigned:
             raise RuntimeError("task has not been assigned check DDMP thread")
@@ -126,10 +126,15 @@ class DistributedPlanning(IStrategy):
             candidate_states = self.get_valid_states(sampled_states)
 
             if not len(candidate_states):
-                print(f"[DistributedPlanning] Robot {self.index} no valid states found")
-                sleep(1e-2)
+                
+                sleep(1e-2) 
                 # try again
-                return self.get(model, num_states)
+                if loop_count < 5:
+                    print(f"[DistributedPlanning2] Robot {self.index} repeating {loop_count + 1}")
+                    self.get(model, num_states, loop_count+1)
+                self.task_assigned = False
+                print(f"[DistributedPlanning2] Robot {self.index} no valid states found")
+                return self.robot.state[:2]
 
             # Evaluate candidates
             normed_entropy = self.get_entropy(model, candidate_states)
