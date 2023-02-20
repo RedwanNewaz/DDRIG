@@ -26,6 +26,8 @@ class EnvAnalysis:
         self._X = np.array(traj[xKey])
         self._Y = np.array(traj[yKey])
         self._len = self.computePathLen()
+        # raw_metric = pd.read_csv(metricPath)
+        # self._metrics = raw_metric[raw_metric['# samples'] <= 500 ]
         self._metrics = pd.read_csv(metricPath)
 
 
@@ -80,7 +82,7 @@ if __name__ == '__main__':
     ENVS = ('N17E073', 'N43W080', 'N45W123', 'N47W124')
     eval_metric = 'rmse'
     srfolder = 'single5'
-    num_robots = 6
+    num_robots = 4
     ddfolder = 'trajDistributed5%d' % num_robots
 
 
